@@ -37,4 +37,27 @@ public class Member extends Account {
 		this.totalBooksCheckedOut++;
 	}
 	
+	public boolean checkoutBookItem(BookItem bookItem) throws Exception {
+	    if (this.getTotalBooksCheckedOut() >= Constants.MAX_BOOKS_ISSUED_TO_A_USER) {
+	      System.out.println("The user has already checked-out maximum number of books");
+	      return false;
+	    }
+	    BookReservation bookReservation = BookReservation.fetchReservationDetails(bookItem.getBarcode());
+	    if (bookReservation != null && bookReservation.getMemberId() != this.getId()) {
+	      // book item has a pending reservation from another user
+	      System.out.println("This book is reserved by another member");
+	      return false;
+	    } else if (bookReservation != null) {
+	      // book item has a pending reservation from the give member, update it
+	      bookReservation.updateStatus(ReservationStatus.Completed);
+	    }
+
+	    if (!bookItem.checkout(bookItem, this.getId())) {
+	      return false;
+	    }
+
+	    this.incTotalBooksCheckedOut();
+	    return true;
+	  }
+	
 }
